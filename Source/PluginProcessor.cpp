@@ -84,9 +84,9 @@ void KLUTCH11WARMTHAudioProcessor::prepareToPlay(double sampleRate, int samplesP
     oversampling8x = std::make_unique<juce::dsp::Oversampling<float>>(
         getTotalNumOutputChannels(), 3, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
 
-    oversampling2x->init מאximumBlockSize(maximumBlockSize);
-    oversampling4x->init מאximumBlockSize(maximumBlockSize);
-    oversampling8x->init מאximumBlockSize(maximumBlockSize);
+    oversampling2x->initProcessing(maximumBlockSize);
+    oversampling4x->initProcessing(maximumBlockSize);
+    oversampling8x->initProcessing(maximumBlockSize);
     oversampling2x->prepare(spec);
     oversampling4x->prepare(spec);
     oversampling8x->prepare(spec);
