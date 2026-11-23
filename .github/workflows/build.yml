@@ -1,0 +1,28 @@
+name: Build KLUTCH 11 WARMTH
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -S . -A x64
+
+      - name: Build VST3
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Upload VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: KLUTCH-11-WARMTH-VST3
+          path: build/KLUTCH11WARMTH_artefacts/Release/VST3/
+          if-no-files-found: error
