@@ -228,6 +228,11 @@ void KLUTCH11WARMTHAudioProcessor::setStateInformation(const void* data, int siz
         parameters.replaceState(juce::ValueTree::fromXml(*xml));
 }
 
+juce::AudioProcessorEditor* KLUTCH11WARMTHAudioProcessor::createEditor()
+{
+    return new KLUTCH11WARMTHAudioProcessorEditor(*this);
+}
+
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new KLUTCH11WARMTHAudioProcessor();
