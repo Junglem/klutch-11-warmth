@@ -29,10 +29,6 @@ namespace
         return soft * (1.0f - amount * 0.35f) + rounded * amount * 0.35f;
     }
 
-    juce::AudioParameterFloatAttributes knobAttributes(const juce::String& label)
-    {
-        return juce::AudioParameterFloatAttributes().withLabel(label);
-    }
 }
 
 KLUTCH11WARMTHAudioProcessor::KLUTCH11WARMTHAudioProcessor()
@@ -49,17 +45,17 @@ KLUTCH11WARMTHAudioProcessor::createParameterLayout()
     using Float = juce::AudioParameterFloat;
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> p;
 
-    p.push_back(std::make_unique<Float>("DRIVE", "DRIVE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.28f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("TUBE", "TUBE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.35f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("TAPE", "TAPE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.25f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("BODY", "BODY", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.30f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("PRESENCE", "PRESENCE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.50f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("AIR", "AIR", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.25f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("TONE", "TONE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.50f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("DENSITY", "DENSITY", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.30f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("MIX", "MIX", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.75f, knobAttributes("%")));
-    p.push_back(std::make_unique<Float>("INPUT", "INPUT", juce::NormalisableRange<float>(-18.0f, 18.0f, 0.01f), 0.0f, knobAttributes("dB")));
-    p.push_back(std::make_unique<Float>("OUTPUT", "OUTPUT", juce::NormalisableRange<float>(-18.0f, 18.0f, 0.01f), 0.0f, knobAttributes("dB")));
+    p.push_back(std::make_unique<Float>("DRIVE", "DRIVE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.28f));
+    p.push_back(std::make_unique<Float>("TUBE", "TUBE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.35f));
+    p.push_back(std::make_unique<Float>("TAPE", "TAPE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.25f));
+    p.push_back(std::make_unique<Float>("BODY", "BODY", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.30f));
+    p.push_back(std::make_unique<Float>("PRESENCE", "PRESENCE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.50f));
+    p.push_back(std::make_unique<Float>("AIR", "AIR", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.25f));
+    p.push_back(std::make_unique<Float>("TONE", "TONE", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.50f));
+    p.push_back(std::make_unique<Float>("DENSITY", "DENSITY", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.30f));
+    p.push_back(std::make_unique<Float>("MIX", "MIX", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.75f));
+    p.push_back(std::make_unique<Float>("INPUT", "INPUT", juce::NormalisableRange<float>(-18.0f, 18.0f, 0.01f), 0.0f));
+    p.push_back(std::make_unique<Float>("OUTPUT", "OUTPUT", juce::NormalisableRange<float>(-18.0f, 18.0f, 0.01f), 0.0f));
     p.push_back(std::make_unique<juce::AudioParameterChoice>("QUALITY", "QUALITY",
         juce::StringArray { "2X", "4X", "8X" }, 1));
 
@@ -72,24 +68,16 @@ void KLUTCH11WARMTHAudioProcessor::prepareToPlay(double sampleRate, int samplesP
     maximumBlockSize = juce::jmax(1, samplesPerBlock);
     dryBuffer.setSize(getTotalNumOutputChannels(), maximumBlockSize);
 
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32>(maximumBlockSize);
-    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
-
     oversampling2x = std::make_unique<juce::dsp::Oversampling<float>>(
-        getTotalNumOutputChannels(), 1, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
+        static_cast<size_t>(getTotalNumOutputChannels()), 1, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
     oversampling4x = std::make_unique<juce::dsp::Oversampling<float>>(
-        getTotalNumOutputChannels(), 2, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
+        static_cast<size_t>(getTotalNumOutputChannels()), 2, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
     oversampling8x = std::make_unique<juce::dsp::Oversampling<float>>(
-        getTotalNumOutputChannels(), 3, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
+        static_cast<size_t>(getTotalNumOutputChannels()), 3, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true);
 
-    oversampling2x->initProcessing(maximumBlockSize);
-    oversampling4x->initProcessing(maximumBlockSize);
-    oversampling8x->initProcessing(maximumBlockSize);
-    oversampling2x->prepare(spec);
-    oversampling4x->prepare(spec);
-    oversampling8x->prepare(spec);
+    oversampling2x->initProcessing(static_cast<size_t>(maximumBlockSize));
+    oversampling4x->initProcessing(static_cast<size_t>(maximumBlockSize));
+    oversampling8x->initProcessing(static_cast<size_t>(maximumBlockSize));
 
     const auto ramp = 0.025;
     driveSmoother.reset(sampleRate, ramp); tubeSmoother.reset(sampleRate, ramp);
@@ -198,20 +186,17 @@ void KLUTCH11WARMTHAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     os->processSamplesDown(block);
 
-    const float outputTrim = outGain;
-    const float wetMix = mix;
-    for (int ch = 0; ch < channels; ++ch)
+    for (int i = 0; i < samples; ++i)
     {
-        auto* wet = buffer.getWritePointer(ch);
-        const auto* dry = dryBuffer.getReadPointer(ch);
-        for (int i = 0; i < samples; ++i)
+        const float mixNow = mixSmoother.getNextValue();
+        const float outNow = outputSmoother.getNextValue();
+        for (int ch = 0; ch < channels; ++ch)
         {
-            const float mixNow = mixSmoother.getNextValue();
-            const float outNow = outputSmoother.getNextValue();
+            auto* wet = buffer.getWritePointer(ch);
+            const auto* dry = dryBuffer.getReadPointer(ch);
             wet[i] = (dry[i] * (1.0f - mixNow) + wet[i] * mixNow) * outNow;
         }
     }
-    juce::ignoreUnused(outputTrim, wetMix);
 }
 
 void KLUTCH11WARMTHAudioProcessor::loadFactoryPreset(int index)
